@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IRON GENESIS</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:  #06080d; --bg2: #0a0e17; --bg3: #101520; --bg4: #172030;
+  --border: #1a2e42; --border2: #243d58;
+  --green: #00e87a; --green-dim: #006636;
+  --cyan: #00cfff;  --cyan-dim: #005a70;
+  --orange: #ff8c00; --orange-dim: #6a3800;
+  --red: #ff2244;   --yellow: #ffd700;
+  --purple: #a57fff; --pink: #ff6bcb;
+  --text: #7aadca; --text-bright: #c0ddf0; --text-dim: #2e4e64;
+  --chip-col: #00ffcc;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:12px;display:flex;flex-direction:column}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px);pointer-events:none;z-index:9999}
+
+/* ── HEADER ── */
+#header{background:var(--bg2);border-bottom:2px solid var(--border);padding:6px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#logo{font-family:'Orbitron',monospace;font-size:1.05rem;font-weight:900;color:var(--green);letter-spacing:6px;text-shadow:0 0 24px rgba(0,232,122,.45)}
+#subtitle{font-size:9px;color:var(--text-dim);letter-spacing:3px;margin-top:1px}
+
+/* ── RESOURCE BAR ── */
+#resource-bar{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;padding:4px 8px;gap:4px;flex-shrink:0;flex-wrap:wrap}
+.res-item{display:flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:3px 8px;flex:1;min-width:88px}
+.res-icon{font-size:13px}
+.res-info{flex:1;min-width:0}
+.res-name{font-size:8px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase}
+.res-value{font-size:13px;font-weight:bold;color:var(--text-bright)}
+.res-rate{font-size:9px;color:var(--green-dim)}
+.res-rate.neg{color:#ff3333}
+.res-rate.zero{color:var(--text-dim)}
+.res-item.chips-item{border-color:rgba(0,255,204,.18)}
+.res-item.chips-item .res-value{color:var(--chip-col)}
+
+/* ── LAYOUT ── */
+#main{display:flex;flex:1;overflow:hidden}
+
+/* ── LEFT PANEL ── */
+#left-panel{width:292px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden}
+#actions-section{padding:8px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:5px}
+.act-btn{width:100%;height:40px;background:linear-gradient(135deg,#0d2e1a,#091a0e);border:2px solid var(--green-dim);border-radius:4px;color:var(--green);font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:2px;cursor:pointer;transition:all .1s}
+.act-btn:hover{border-color:var(--green);background:linear-gradient(135deg,#163d22,#0f2515)}
+.act-btn:active{transform:scale(.97)}
+.act-btn.forge{background:linear-gradient(135deg,#2e1200,#1a0b00);border-color:var(--orange-dim);color:var(--orange)}
+.act-btn.forge:hover{border-color:var(--orange);background:linear-gradient(135deg,#3d1a00,#221000)}
+.act-btn:disabled,.act-btn.disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
+.act-hint{font-size:9px;color:var(--text-dim);text-align:center;line-height:1.4}
+
+#buildings-section{flex:1;overflow-y:auto;padding:8px}
+#buildings-section::-webkit-scrollbar{width:3px}
+#buildings-section::-webkit-scrollbar-track{background:var(--bg2)}
+#buildings-section::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.sec-hdr{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:3px;color:var(--text-dim);padding:5px 3px;border-bottom:1px solid var(--border);margin-bottom:6px}
+
+/* ── BUILDING CARDS ── */
+.bcard{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:7px;margin-bottom:5px;cursor:pointer;transition:all .15s;font-size:10px}
+.bcard:hover:not(.locked):not(.cannot-afford):not(.idle):not(.starved){border-color:var(--cyan-dim);background:var(--bg4)}
+.bcard.locked{opacity:.4;cursor:not-allowed}
+.bcard.cannot-afford{opacity:.6;cursor:not-allowed}
+.bcard.affordable{border-color:var(--green-dim)}
+.bcard.affordable:hover{border-color:var(--green)}
+.bcard.starved{border-color:rgba(255,34,68,.5)!important;background:rgba(40,0,10,.5)!important}
+.bcard.idle{border-color:rgba(255,140,0,.3)!important;opacity:.7}
+.bcard-hdr{display:flex;justify-content:space-between;align-items:center}
+.bcard-name{font-size:11px;color:var(--text-bright);letter-spacing:1px}
+.bcard-cnt{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;color:var(--cyan)}
+.bcard-desc{font-size:9px;color:var(--text-dim);margin:2px 0}
+.bcard-cost{font-size:9px;color:var(--orange)}
+.bstatus{font-size:9px;margin-top:2px}
+.bstatus.producing{color:var(--green)}
+.bstatus.idle{color:var(--orange)}
+.bstatus.starved{color:var(--red)}
+.bbots{font-size:9px;color:var(--yellow);margin-top:2px}
+
+/* Capacity bar */
+.cap-row{display:flex;align-items:center;gap:5px;margin-top:3px}
+.cap-bar-wrap{flex:1;height:5px;background:var(--bg);border:1px solid var(--border);border-radius:2px;overflow:hidden}
+.cap-bar-fill{height:100%;border-radius:2px;transition:width .3s}
+.cap-bar-fill.ok{background:var(--cyan-dim)}
+.cap-bar-fill.full{background:var(--orange)}
+.cap-label{font-size:8px;white-space:nowrap}
+
+/* ── CENTER ── */
+#center-panel{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg2)}
+.tab-btn{padding:9px 14px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;transition:all .2s;text-transform:uppercase;white-space:nowrap}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+#tab-content{flex:1;overflow-y:auto;padding:10px}
+#tab-content::-webkit-scrollbar{width:3px}
+#tab-content::-webkit-scrollbar-track{background:var(--bg2)}
+#tab-content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ── TIER CARDS ── */
+.tier-card{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:10px;margin-bottom:10px}
+.tier-card.locked-tier{opacity:.3}
+.tier-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.tier-name{font-family:'Orbitron',monospace;font-size:12px;color:var(--text-bright);letter-spacing:2px}
+.tier-count{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;color:var(--yellow)}
+.tier-meta{font-size:9px;color:var(--text-dim);margin-bottom:7px}
+.tier-grid-wrap{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:8px}
+
+/* ── PROPORTIONAL GRID ── */
+.tgrid-container{position:relative;background:var(--bg);border:1px solid var(--border2);border-radius:4px;flex-shrink:0}
+.tc{position:absolute;border:1px solid var(--border2);border-radius:2px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .12s,background .12s,box-shadow .12s;overflow:hidden;background:var(--bg4)}
+.tc:hover{border-color:var(--orange);background:#1f2d40;z-index:2}
+.tc.filled{background:#132135;border-color:var(--cyan);cursor:pointer}
+.tc.filled:hover{border-color:var(--red);background:#2a1020}
+.tc.drop-hi{border-color:rgba(255,215,0,.6)!important;box-shadow:0 0 6px rgba(255,215,0,.25)!important;background:rgba(255,215,0,.04)!important}
+.comp-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2px;width:100%;height:100%;gap:2px;pointer-events:none}
+.comp-icon{line-height:1}
+.comp-lbl{color:var(--cyan);line-height:1.2;word-break:break-word;max-width:95%}
+
+/* Tier actions */
+.tier-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tier-actions input{background:var(--bg);border:1px solid var(--border2);border-radius:3px;color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:11px;padding:4px 7px;width:65px}
+.btn-sm{background:var(--bg4);border:1px solid var(--border2);border-radius:3px;color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 10px;cursor:pointer;letter-spacing:1px;white-space:nowrap;transition:all .15s}
+.btn-sm:hover:not(:disabled){border-color:var(--cyan);background:#152030}
+.btn-sm:disabled{opacity:.35;cursor:not-allowed}
+.btn-sm.build{border-color:var(--green-dim);color:var(--green)}
+.btn-sm.build:hover:not(:disabled){border-color:var(--green);background:#0d2a16}
+
+/* Component list beside grid */
+.tier-comp-list{font-size:9px;color:var(--text-dim);flex:1;min-width:100px;line-height:1.8}
+.tier-comp-entry{color:var(--text-bright);display:flex;align-items:baseline;gap:4px}
+.tier-comp-entry span{color:var(--green-dim)}
+
+/* Bonus summary */
+.bonus-bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;margin-bottom:6px}
+.bonus-pill{background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:2px 7px;font-size:8px;white-space:nowrap}
+.bonus-pill.active{border-color:var(--green-dim);color:var(--green)}
+.bonus-pill.zero{color:var(--text-dim)}
+
+/* ── ASSIGN TABLE ── */
+.assign-table{width:100%;border-collapse:collapse;font-size:10px}
+.assign-table th,.assign-table td{border:1px solid var(--border);padding:4px 6px;text-align:center}
+.assign-table th{background:var(--bg2);color:var(--text-dim);font-size:8px;letter-spacing:1px}
+.assign-table td{background:var(--bg3)}
+.assign-table input{background:var(--bg);border:1px solid var(--border2);border-radius:2px;color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:10px;padding:3px 5px;width:52px;text-align:center}
+.assign-table input.over-cap{border-color:var(--red);color:var(--red)}
+.cap-cell{font-size:9px;color:var(--text-dim)}
+.cap-cell.at-cap{color:var(--orange)}
+
+/* ── COMPONENT PALETTE ── */
+.comp-palette{display:flex;flex-wrap:wrap;gap:5px;padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;align-items:center}
+.comp-chip{display:flex;align-items:center;gap:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:3px;padding:4px 8px;cursor:grab;font-size:9px;color:var(--text);transition:all .15s;white-space:nowrap;user-select:none}
+.comp-chip:hover{border-color:var(--purple);color:var(--text-bright)}
+.comp-chip:active{cursor:grabbing;opacity:.7}
+.sz-badge{background:var(--bg);border:1px solid var(--border2);border-radius:2px;padding:1px 4px;font-size:7px;color:var(--purple)}
+.comp-cnt{font-size:9px;color:var(--yellow)}
+
+/* ── UPGRADES ── */
+.upgrade-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ucard{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:10px;cursor:pointer;transition:all .15s}
+.ucard:hover:not(.locked):not(.cannot-afford):not(.purchased){border-color:var(--purple);background:var(--bg4)}
+.ucard.purchased{opacity:.4;cursor:default;border-color:var(--green-dim)}
+.ucard.purchased .uname::after{content:' ✓';color:var(--green)}
+.ucard.locked{opacity:.25;cursor:not-allowed}
+.ucard.cannot-afford{opacity:.5;cursor:not-allowed}
+.ucard.affordable{border-color:var(--purple);box-shadow:0 0 10px rgba(165,127,255,.12)}
+.uname{font-size:11px;color:var(--text-bright);margin-bottom:3px}
+.ueffect{font-size:9px;color:var(--green-dim);margin-bottom:3px}
+.ucost{font-size:9px;color:var(--orange)}
+.ureq{font-size:8px;color:var(--text-dim)}
+
+/* ── BATTLE ── */
+.rcard{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:12px;margin-bottom:8px;transition:border-color .2s}
+.rcard.conquered{border-color:var(--green-dim)}
+.rcard.active-battle{border-color:var(--orange);animation:pulseb 1s infinite}
+.rcard.locked-r{opacity:.3}
+@keyframes pulseb{0%,100%{border-color:var(--orange)}50%{border-color:var(--orange-dim)}}
+.rhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.rname{font-size:12px;color:var(--text-bright);font-family:'Orbitron',monospace;letter-spacing:2px}
+.skull{color:var(--red);font-size:11px}
+.skull.dim{color:var(--text-dim)}
+.prog-bar{height:6px;background:var(--bg);border:1px solid var(--border);border-radius:2px;overflow:hidden;margin:4px 0}
+.prog-fill{height:100%;transition:width .3s;border-radius:2px}
+.prog-fill.enemy{background:var(--red)}
+.prog-fill.player{background:var(--green)}
+.deploy-row{display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.dep-input{background:var(--bg);border:1px solid var(--border2);border-radius:3px;color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:11px;padding:4px 8px;width:88px}
+.dep-btn{background:linear-gradient(135deg,#200a00,#3a1000);border:1px solid var(--orange-dim);border-radius:3px;color:var(--orange);font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 12px;cursor:pointer;letter-spacing:1px}
+.dep-btn:hover:not(:disabled){border-color:var(--orange)}
+.dep-btn:disabled{opacity:.3;cursor:not-allowed}
+.recall-btn{background:var(--bg4);border:1px solid var(--border2);border-radius:3px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 12px;cursor:pointer}
+.recall-btn:hover{color:var(--text);border-color:var(--border2)}
+.reward-badge{display:inline-block;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.25);border-radius:3px;color:var(--yellow);font-size:9px;padding:2px 7px;margin-top:3px}
+
+/* ── LOG ── */
+#log-panel{width:220px;flex-shrink:0;border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+#log-hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:7px 10px;font-family:'Orbitron',monospace;font-size:9px;letter-spacing:2px;color:var(--text-dim);flex-shrink:0}
+#log-body{flex:1;overflow-y:auto;padding:5px;display:flex;flex-direction:column-reverse}
+#log-body::-webkit-scrollbar{width:3px}
+.le{font-size:9px;padding:2px 0;border-bottom:1px solid rgba(26,46,66,.3);line-height:1.3}
+.lt{color:var(--text-dim);margin-right:3px}
+.li{color:var(--text)} .ls{color:var(--green)} .lw{color:var(--orange)} .lb{color:var(--red)} .lv{color:var(--yellow)}
+
+/* ── STATS BAR ── */
+#stats-bar{background:var(--bg2);border-top:1px solid var(--border);padding:3px 12px;display:flex;gap:14px;font-size:9px;color:var(--text-dim);flex-shrink:0}
+#stats-bar span{color:var(--text)}
+
+/* ── INFO BOX ── */
+.info-box{padding:6px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;font-size:10px;color:var(--text-dim);margin-bottom:8px;line-height:1.5}
+.info-box b{color:var(--cyan)}
+
+/* ── DOMINATION ── */
+#dom-screen{display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:10000;align-items:center;justify-content:center;flex-direction:column;text-align:center}
+#dom-screen.show{display:flex}
+#dom-title{font-family:'Orbitron',monospace;font-size:2.4rem;font-weight:900;color:var(--yellow);letter-spacing:6px;text-shadow:0 0 40px rgba(255,215,0,.6);animation:dompulse 2s infinite;margin-bottom:15px}
+@keyframes dompulse{0%,100%{opacity:1}50%{opacity:.65}}
+#dom-msg{font-size:13px;color:var(--text-bright);letter-spacing:3px;margin-bottom:20px;line-height:2}
+#reset-btn{background:rgba(255,215,0,.1);border:1px solid var(--yellow);border-radius:4px;color:var(--yellow);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;padding:10px 24px;cursor:pointer}
+
+/* ── FLOAT TEXT ── */
+.float-txt{position:fixed;font-size:12px;font-family:'Share Tech Mono',monospace;pointer-events:none;z-index:1000;animation:floatup 1s ease-out forwards;font-weight:bold}
+@keyframes floatup{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-40px)}}
+
+@media(max-width:1100px){#left-panel{width:230px}#log-panel{display:none}}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div><div id="logo">IRON GENESIS</div><div id="subtitle">TIERED BOT ENGINEERING PROTOCOL</div></div>
+  <div style="font-size:10px;color:var(--text-dim)">RUNTIME: <span id="runtime">00:00:00</span></div>
+</div>
+
+<div id="resource-bar">
+  <div class="res-item"><div class="res-icon">⛏</div><div class="res-info"><div class="res-name">Ore</div><div class="res-value" id="res-ore">0</div><div class="res-rate" id="rate-ore">+0/s</div></div></div>
+  <div class="res-item"><div class="res-icon">💎</div><div class="res-info"><div class="res-name">Silicon</div><div class="res-value" id="res-silicon">0</div><div class="res-rate" id="rate-silicon">+0/s</div></div></div>
+  <div class="res-item"><div class="res-icon">⚡</div><div class="res-info"><div class="res-name">Energy</div><div class="res-value" id="res-energy">0</div><div class="res-rate" id="rate-energy">+0/s</div></div></div>
+  <div class="res-item"><div class="res-icon">🔩</div><div class="res-info"><div class="res-name">Steel</div><div class="res-value" id="res-steel">0</div><div class="res-rate" id="rate-steel">+0/s</div></div></div>
+  <div class="res-item"><div class="res-icon">🔬</div><div class="res-info"><div class="res-name">Conductors</div><div class="res-value" id="res-cond">0</div><div class="res-rate" id="rate-cond">+0/s</div></div></div>
+  <div class="res-item chips-item"><div class="res-icon">🔲</div><div class="res-info"><div class="res-name">Chips</div><div class="res-value" id="res-chips">0</div><div class="res-rate" id="rate-chips">+0/s</div></div></div>
+  <div class="res-item"><div class="res-icon">🧩</div><div class="res-info"><div class="res-name">Components</div><div class="res-value" id="res-comps">0</div><div class="res-rate" style="color:var(--text-dim)">in inventory</div></div></div>
+</div>
+
+<div id="main">
+  <!-- LEFT PANEL -->
+  <div id="left-panel">
+    <div id="actions-section">
+      <button class="act-btn" id="mine-btn" onclick="manualMine(event)">⛏ EXTRACT ORE + SILICON</button>
+      <button class="act-btn forge" id="forge-btn" onclick="manualForge(event)">🔥 FORGE STEEL (4 ore → 1)</button>
+      <div class="act-hint" id="click-hint">Mining: <span id="click-power" style="color:var(--green)">+1 ore</span></div>
+    </div>
+    <div id="buildings-section">
+      <div class="sec-hdr">// INFRASTRUCTURE</div>
+      <div id="buildings-list"></div>
+    </div>
+  </div>
+
+  <!-- CENTER PANEL -->
+  <div id="center-panel">
+    <div id="tabs">
+      <button class="tab-btn active" onclick="switchTab('tiers',event)">🤖 BOT TIERS</button>
+      <button class="tab-btn" onclick="switchTab('upgrades',event)">🔬 UPGRADES</button>
+      <button class="tab-btn" onclick="switchTab('battle',event)">⚔ BATTLE</button>
+    </div>
+    <div id="tab-content">
+      <!-- TIERS TAB -->
+      <div id="tab-tiers" class="tab-panel active">
+        <div class="sec-hdr" style="margin-bottom:8px">// BOT TIER MANAGEMENT</div>
+        <div class="info-box">
+          💡 <b>Drag components</b> from the palette onto tier grid cells — components apply to <b>ALL bots</b> of that tier.
+          Components have sizes (W×H) and snap to proportional grid slots. <b>Click a placed component</b> to remove it.
+          <b>Buildings only produce when bots are assigned to them.</b>
+        </div>
+        <div class="comp-palette" id="comp-palette"></div>
+        <div id="tiers-container" style="margin-top:10px"></div>
+        <div class="sec-hdr" style="margin:12px 0 6px">// BOT ASSIGNMENT MATRIX</div>
+        <div style="overflow-x:auto" id="assign-matrix"></div>
+      </div>
+      <!-- UPGRADES TAB -->
+      <div id="tab-upgrades" class="tab-panel">
+        <div class="sec-hdr" style="margin-bottom:8px">// RESEARCH TREE</div>
+        <div class="upgrade-grid" id="upgrades-list"></div>
+      </div>
+      <!-- BATTLE TAB -->
+      <div id="tab-battle" class="tab-panel">
+        <div class="sec-hdr" style="margin-bottom:8px">// CONQUEST OPERATIONS</div>
+        <div class="info-box">Deploy bots to conquer regions. <b>Combat</b> components deal more damage. <b>Shield</b> components reduce losses. Higher-tier bots attack from highest tier down.</div>
+        <div id="regions-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOG -->
+  <div id="log-panel">
+    <div id="log-hdr">// OPERATIONS LOG</div>
+    <div id="log-body"></div>
+  </div>
+</div>
+
+<div id="stats-bar">
+  <div>Bots: <span id="stat-bots">0</span></div>
+  <div>Battles: <span id="stat-battles">0</span></div>
+  <div>Regions: <span id="stat-regions">0</span>/5</div>
+  <div>Tiers: <span id="stat-tiers">1</span>/5</div>
+  <div>Forged: <span id="stat-forged">0</span> steel</div>
+</div>
+
+<div id="dom-screen">
+  <div id="dom-title">WORLD DOMINATION ACHIEVED</div>
+  <div id="dom-msg">ALL 5 REGIONS SUBJUGATED<br>HUMAN RESISTANCE: ELIMINATED<br>IRON GENESIS PROTOCOL: COMPLETE</div>
+  <button id="reset-btn" onclick="location.reload()">[ NEW GAME ]</button>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  GRID CONSTANTS — per-tier proportional sizing
+// ══════════════════════════════════════════════
+const GRID_GAP = 3;   // px between cells (constant)
+const GRID_PAD = 4;   // container inner padding (constant)
+const GRID_PX  = 200; // target total grid width/height (px)
+
+// Compute cell pixel size for tier t so all grids are ~GRID_PX wide
+function cellPx(t) {
+  const gs = TIER_SIZES[t - 1];
+  // cell = (total - 2*pad - (gs-1)*gap) / gs
+  return Math.max(22, Math.floor((GRID_PX - GRID_PAD * 2 - (gs - 1) * GRID_GAP) / gs));
+}
+function cellStep(t) { return cellPx(t) + GRID_GAP; }
+function gridSz(t)   { const gs = TIER_SIZES[t-1]; return gs * cellStep(t) - GRID_GAP + GRID_PAD * 2; }
+
+// ══════════════════════════════════════════════
+//  CONSTANTS
+// ══════════════════════════════════════════════
+const TIER_SIZES    = [2, 3, 4, 5, 6];
+const TIER_NAMES    = ['Tier I', 'Tier II', 'Tier III', 'Tier IV', 'Tier V'];
+const TIER_POWER    = [1, 2.5, 6, 15, 40];
+const TIER_BOT_COST = [
+  { steel: 25 },
+  { steel: 60,  cond: 15 },
+  { steel: 150, cond: 40,  chips: 10 },
+  { steel: 400, cond: 100, chips: 50 },
+  { steel: 1000,cond: 300, chips: 200 }
+];
+
+const CICONS = {
+  mining:'⛏', smelting:'🔥', combat:'⚔', speed:'⚡',
+  defense:'🛡', efficiency:'♻', energy:'🔋',
+  research:'🔬', factory:'🤖', chips:'🔲', storage:'📦'
+};
+
+// Components — w×h = grid footprint (in cells)
+const COMPS = [
+  {id:'m1',  name:'Mining Drill',      cat:'mining',    desc:'+30% mining',      val:.30, w:2,h:1},
+  {id:'m2',  name:'Adv Drill',         cat:'mining',    desc:'+60% mining',      val:.60, w:2,h:1},
+  {id:'m3',  name:'Quantum Extract',   cat:'mining',    desc:'+100% mining',     val:1.0, w:2,h:1},
+  {id:'s1',  name:'Smelting Coil',     cat:'smelting',  desc:'+30% smelting',    val:.30, w:2,h:1},
+  {id:'s2',  name:'Plasma Injector',   cat:'smelting',  desc:'+60% smelting',    val:.60, w:2,h:1},
+  {id:'s3',  name:'Arc Furnace',       cat:'smelting',  desc:'+100% smelting',   val:1.0, w:2,h:1},
+  {id:'c1',  name:'Light Armor',       cat:'combat',    desc:'+40% dmg',         val:.40, w:1,h:2},
+  {id:'c2',  name:'Heavy Cannon',      cat:'combat',    desc:'+80% dmg',         val:.80, w:1,h:2},
+  {id:'c3',  name:'Railgun',           cat:'combat',    desc:'+150% dmg',        val:1.5, w:1,h:2},
+  {id:'sp1', name:'Overclock',         cat:'speed',     desc:'+15% all spd',     val:.15, w:1,h:1},
+  {id:'sp2', name:'Turbo OC',          cat:'speed',     desc:'+30% all spd',     val:.30, w:1,h:1},
+  {id:'d1',  name:'Shield Module',     cat:'defense',   desc:'-25% losses',      val:.25, w:1,h:2},
+  {id:'d2',  name:'Energy Shield',     cat:'defense',   desc:'-45% losses',      val:.45, w:1,h:2},
+  {id:'e1',  name:'Efficiency Mod',    cat:'efficiency',desc:'-15% consume',     val:.15, w:1,h:1},
+  {id:'e2',  name:'Nano Efficiency',   cat:'efficiency',desc:'-30% consume',     val:.30, w:1,h:1},
+  {id:'en1', name:'Micro Reactor',     cat:'energy',    desc:'+40% energy out',  val:.40, w:2,h:1},
+  {id:'en2', name:'Fusion Cell',       cat:'energy',    desc:'+80% energy out',  val:.80, w:2,h:1},
+  {id:'r1',  name:'Research Core',     cat:'research',  desc:'+20% research',    val:.20, w:1,h:1},
+  {id:'f1',  name:'Assembly Opt.',     cat:'factory',   desc:'+25% factory out', val:.25, w:2,h:1},
+  {id:'ch1', name:'Logic Array',       cat:'chips',     desc:'+30% chip out',    val:.30, w:2,h:1},
+  {id:'ch2', name:'Neural Processor',  cat:'chips',     desc:'+60% chip out',    val:.60, w:2,h:1},
+  {id:'st1', name:'Storage Bay',       cat:'storage',   desc:'+cap (utility)',   val:0,   w:2,h:2},
+];
+
+// botCap = max bots assignable PER building count
+const BDEFS = {
+  smelter:     {name:'Basic Smelter',   desc:'Converts ore → steel.',           icon:'🔥',count:0,baseCost:{ore:80},          scale:1.35,prod:'steel', rate:0.4,  cons:{ore:1.5},    unlocked:true,  msg:'',                           cat:'smelting', botCap:3},
+  miningRig:   {name:'Mining Rig',      desc:'Auto-extracts iron ore.',         icon:'🏗',count:0,baseCost:{steel:15},         scale:1.28,prod:'ore',   rate:0.8,  cons:{},           unlocked:false, msg:'Build 1 Smelter',            cat:'mining',   botCap:4},
+  siliconMine: {name:'Silicon Mine',    desc:'Extracts silicon crystals.',      icon:'💠',count:0,baseCost:{steel:25},         scale:1.3, prod:'silicon',rate:0.6,  cons:{},           unlocked:false, msg:'Build 3 Mining Rigs',        cat:'mining',   botCap:4},
+  powerPlant:  {name:'Power Plant',     desc:'Generates energy, boosts output.',icon:'⚡',count:0,baseCost:{steel:40,silicon:10},scale:1.35,prod:'energy',rate:1.5, cons:{},           unlocked:false, msg:'Build 1 Silicon Mine',       cat:'energy',   botCap:2},
+  condLab:     {name:'Conductor Lab',   desc:'Synthesizes superconductors.',    icon:'🔬',count:0,baseCost:{steel:80,silicon:35},scale:1.4,prod:'cond',  rate:0.15, cons:{silicon:.8}, unlocked:false, msg:'Build 1 Power Plant',        cat:'smelting', botCap:3},
+  chipFactory: {name:'Chip Factory',    desc:'Manufactures logic chips.',       icon:'🔲',count:0,baseCost:{steel:120,cond:30},scale:1.4, prod:'chips',  rate:0.08, cons:{silicon:.4,steel:.2},unlocked:false,msg:'Build 1 Conductor Lab',  cat:'chips',    botCap:3},
+  robotFactory:{name:'Robot Factory',   desc:'Auto-produces Tier I bots.',      icon:'🤖',count:0,baseCost:{steel:180,cond:40},scale:1.45,prod:'bots',   rate:0.03, cons:{energy:.8},  unlocked:false, msg:'Build 1 Chip Factory',       cat:'factory',  botCap:4},
+  megaFurnace: {name:'Mega Furnace',    desc:'Industrial-scale steel output.',  icon:'🏭',count:0,baseCost:{steel:500,cond:100},scale:1.55,prod:'steel',  rate:2.5,  cons:{ore:6},      unlocked:false, msg:'Build 4 Robot Factories',    cat:'smelting', botCap:6},
+};
+
+const UPGRADES = [
+  {id:'u_m1', name:'Tungsten Drill Bits', eff:'×2 Mining Rig output',       cost:{steel:100},             req:()=>BDEFS.miningRig.count>=3,                    reqMsg:'3 Mining Rigs',    fn:()=>{uM.miningRig*=2}},
+  {id:'u_s1', name:'Alloy Crucibles',     eff:'×2 Smelter output',          cost:{steel:150},             req:()=>BDEFS.smelter.count>=3,                      reqMsg:'3 Smelters',       fn:()=>{uM.smelter*=2}},
+  {id:'u_cl1',name:'Hydraulic Excavator', eff:'×3 manual click yield',      cost:{steel:80},              req:()=>G.clicks>=40,                                reqMsg:'40 manual clicks', fn:()=>{clickMul*=3}},
+  {id:'u_si1',name:'Quantum Extraction',  eff:'×2 Silicon Mine output',     cost:{steel:200,silicon:50},  req:()=>BDEFS.siliconMine.count>=3,                  reqMsg:'3 Silicon Mines',  fn:()=>{uM.siliconMine*=2}},
+  {id:'u_pp1',name:'Fusion Reactor',      eff:'×3 Power Plant output',      cost:{steel:300,silicon:80},  req:()=>BDEFS.powerPlant.count>=2,                   reqMsg:'2 Power Plants',   fn:()=>{uM.powerPlant*=3}},
+  {id:'u_cd1',name:'Room-Temp Synthesis', eff:'×2 Conductor Lab output',    cost:{steel:400,cond:50},     req:()=>BDEFS.condLab.count>=2,                      reqMsg:'2 Cond. Labs',     fn:()=>{uM.condLab*=2}},
+  {id:'u_cf1',name:'Nano Lithography',    eff:'×2 Chip Factory output',     cost:{steel:300,cond:80},     req:()=>BDEFS.chipFactory.count>=2,                  reqMsg:'2 Chip Factories', fn:()=>{uM.chipFactory*=2}},
+  {id:'u_rb1',name:'Neural AI',           eff:'×2 Robot Factory output',    cost:{steel:700,cond:180},    req:()=>BDEFS.robotFactory.count>=2,                 reqMsg:'2 Robot Factories',fn:()=>{uM.robotFactory*=2}},
+  {id:'u_g1', name:'Hive Mind Network',   eff:'×1.5 ALL production',        cost:{steel:3000,cond:1000},  req:()=>G.stats.rgn>=2,                              reqMsg:'Conquer 2 regions',fn:()=>{globalMul*=1.5}},
+  {id:'u_cb1',name:'Titanium Chassis',    eff:'+60% combat bot damage',     cost:{steel:900,cond:350},    req:()=>totalBots()>=50,                             reqMsg:'50 total bots',    fn:()=>{combatMul*=1.6}},
+  {id:'u_t2', name:'Unlock Tier II',      eff:'Access Tier II bots',        cost:{steel:200,cond:30},     req:()=>G.tiers[1].unlocked&&BDEFS.condLab.count>=1, reqMsg:'1 Conductor Lab',  fn:()=>{unlockTier(2)}, tierU:2},
+  {id:'u_t3', name:'Unlock Tier III',     eff:'Access Tier III bots',       cost:{steel:800,cond:150,chips:20},  req:()=>G.tiers[2]?.unlocked&&BDEFS.chipFactory.count>=1,reqMsg:'1 Chip Factory',fn:()=>{unlockTier(3)}, tierU:3},
+  {id:'u_t4', name:'Unlock Tier IV',      eff:'Access Tier IV bots',        cost:{steel:3000,cond:600,chips:100},req:()=>G.tiers[3]?.unlocked&&G.stats.rgn>=3,  reqMsg:'Conquer 3 regions',fn:()=>{unlockTier(4)}, tierU:4},
+  {id:'u_t5', name:'Unlock Tier V',       eff:'Access Tier V bots',         cost:{steel:12000,cond:3000,chips:500},req:()=>G.tiers[4]?.unlocked&&G.stats.rgn>=4,reqMsg:'Conquer 4 regions',fn:()=>{unlockTier(5)}, tierU:5},
+];
+
+const REGIONS = [
+  {id:'r1',name:'SILICON VALLEY RUINS',  diff:1,desc:'Light human militia.',
+   def:500,   maxDef:500,   reward:'Unlocks Silicon Mine + 40 steel',
+   rewardFn:()=>{BDEFS.siliconMine.unlocked=true;G.res.steel+=40;addLog('Silicon mines now online!','victory')},
+   botStr:1,defStr:.5,active:false,won:false,depBots:0,lostBots:0,depByTier:{}},
+  {id:'r2',name:'THE RUST BELT',          diff:2,desc:'National Guard entrenched.',
+   def:2500,  maxDef:2500,  reward:'Power Plant + 150 steel + 40 cond',
+   rewardFn:()=>{BDEFS.powerPlant.unlocked=true;G.res.steel+=150;G.res.cond+=40;addLog('Power grid seized!','victory')},
+   botStr:1,defStr:1,active:false,won:false,depBots:0,lostBots:0,depByTier:{}},
+  {id:'r3',name:'NUCLEAR HIGHLANDS',      diff:3,desc:'Heavily fortified military base.',
+   def:12000, maxDef:12000, reward:'Mega Furnace + ×1.5 global production',
+   rewardFn:()=>{BDEFS.megaFurnace.unlocked=true;globalMul*=1.5;addLog('Nuclear arsenal secured!','victory')},
+   botStr:1,defStr:2,active:false,won:false,depBots:0,lostBots:0,depByTier:{}},
+  {id:'r4',name:'ARCTIC VAULT COMPLEX',   diff:4,desc:'Elite mechanized response force.',
+   def:60000, maxDef:60000, reward:'+5 Robot Factories + ×2 cond production',
+   rewardFn:()=>{BDEFS.robotFactory.count+=5;uM.condLab*=2;addLog('Arctic vault breached!','victory')},
+   botStr:1,defStr:3.5,active:false,won:false,depBots:0,lostBots:0,depByTier:{}},
+  {id:'r5',name:'GLOBAL COMMAND CENTER',  diff:5,desc:'Last human stronghold.',
+   def:300000,maxDef:300000,reward:'⚡ WORLD DOMINATION ⚡',
+   rewardFn:()=>triggerDom(),
+   botStr:1,defStr:6,active:false,won:false,depBots:0,lostBots:0,depByTier:{}},
+];
+
+// ══════════════════════════════════════════════
+//  GAME STATE
+// ══════════════════════════════════════════════
+const G = {
+  res:   {ore:0,silicon:0,energy:0,steel:0,cond:0,chips:0},
+  rates: {ore:0,silicon:0,energy:0,steel:0,cond:0,chips:0,bots:0},
+  tiers: {},
+  unlocked: 1,
+  inv:    {},
+  assign: {},
+  stats:  {clicks:0,forgeClicks:0,forged:0,rgn:0,battles:0,start:Date.now()},
+  upgrades: {},
+  tick: 0,
+  won:  false,
+  dragging: null,
+  clicks: 0,
+};
+
+for (let t = 1; t <= 5; t++) G.tiers[t] = {count:0, grid:{}, occupied:new Set(), unlocked:t===1};
+for (const bk of Object.keys(BDEFS)) {G.assign[bk] = {}; for (let t=1;t<=5;t++) G.assign[bk][t]=0;}
+
+G.inv['m1']=2; G.inv['s1']=2; G.inv['sp1']=1; G.inv['c1']=1; G.inv['ch1']=1;
+
+let clickMul=1, globalMul=1, combatMul=1;
+const uM = {smelter:1,miningRig:1,siliconMine:1,powerPlant:1,condLab:1,chipFactory:1,robotFactory:1,megaFurnace:1};
+
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+function fmt(n){
+  if(n>=1e9) return (n/1e9).toFixed(2)+'B';
+  if(n>=1e6) return (n/1e6).toFixed(2)+'M';
+  if(n>=1e3) return (n/1e3).toFixed(1)+'K';
+  return Math.floor(n).toString();
+}
+function fmtR(n){
+  if(Math.abs(n)<.0005) return '+0/s';
+  const s=n>=0?'+':'';
+  if(Math.abs(n)>=1e3) return s+(n/1e3).toFixed(1)+'K/s';
+  return s+n.toFixed(2)+'/s';
+}
+function canAfford(c){for(const[k,v] of Object.entries(c)) if((G.res[k]||0)<v) return false;return true;}
+function spend(c){for(const[k,v] of Object.entries(c)) G.res[k]=Math.max(0,(G.res[k]||0)-v);}
+function totalBots(){let s=0;for(let t=1;t<=5;t++) s+=G.tiers[t].count;return s;}
+function totalInBattle(){return REGIONS.reduce((s,r)=>s+(r.active&&!r.won?r.depBots:0),0);}
+function availBots(){return Math.max(0,totalBots()-totalInBattle());}
+function unlockTier(t){if(G.tiers[t].unlocked)return;G.tiers[t].unlocked=true;G.unlocked=Math.max(G.unlocked,t);addLog(`🔓 ${TIER_NAMES[t-1]} bots unlocked!`,'victory');}
+function compById(id){return COMPS.find(c=>c.id===id);}
+
+// Component bonuses for a tier
+function tierBonus(t,cat){
+  let b=0;
+  for(const cid of Object.values(G.tiers[t].grid)){const c=compById(cid);if(c&&c.cat===cat)b+=c.val;}
+  return b;
+}
+function tierSpeed(t)  {return tierBonus(t,'speed');}
+function tierDef(t)    {return tierBonus(t,'defense');}
+function tierCombat(t) {return tierBonus(t,'combat');}
+function tierEff(t)    {return Math.min(.8,tierBonus(t,'efficiency'));}
+function energyMul()   {return 1+BDEFS.powerPlant.count*.04;}
+
+// Building capacity
+function buildingMaxBots(bk){
+  const b=BDEFS[bk];
+  return b.count * (b.botCap || 4);
+}
+function assignedBots(bk){
+  let s=0;for(let t=1;t<=5;t++) s+=G.assign[bk]?.[t]||0;return s;
+}
+function capPct(bk){
+  const mx=buildingMaxBots(bk); if(!mx) return 0;
+  return Math.min(1, assignedBots(bk)/mx);
+}
+
+// ══════════════════════════════════════════════
+//  BUILDING LOGIC
+// ══════════════════════════════════════════════
+function buildingCost(bk){
+  const b=BDEFS[bk],c={};
+  for(const[k,v] of Object.entries(b.baseCost)) c[k]=Math.ceil(v*Math.pow(b.scale,b.count));
+  return c;
+}
+function isStarved(bk){
+  const b=BDEFS[bk];
+  if(!b.cons) return false;
+  for(const rk of Object.keys(b.cons)) if((G.res[rk]||0)<=0) return true;
+  return false;
+}
+function buildingRate(bk){
+  const b=BDEFS[bk];
+  if(b.count<=0) return 0;
+  if(assignedBots(bk)===0) return 0;
+  if(isStarved(bk)) return 0;
+  let r=b.rate*b.count*(uM[bk]||1)*globalMul*energyMul();
+  for(let t=1;t<=5;t++){
+    const a=G.assign[bk]?.[t]||0;
+    if(a>0&&G.tiers[t].unlocked){
+      const cb=tierBonus(t,b.cat||'mining');
+      r+=a*TIER_POWER[t-1]*(1+cb)*(1+tierSpeed(t))*.15;
+    }
+  }
+  return r;
+}
+function buildingCons(bk){
+  const b=BDEFS[bk];
+  if(b.count<=0||assignedBots(bk)===0||isStarved(bk)) return {};
+  const c={};
+  let bestEff=0;
+  for(let t=1;t<=5;t++) if(G.assign[bk]?.[t]>0) bestEff=Math.max(bestEff,tierEff(t));
+  for(const[rk,a] of Object.entries(b.cons||{})) c[rk]=a*b.count*(1-bestEff);
+  return c;
+}
+
+// ══════════════════════════════════════════════
+//  ACTIONS
+// ══════════════════════════════════════════════
+function manualMine(e){
+  const ore=1*clickMul*(1+totalBots()*.01);
+  const sil=.5*clickMul*(1+totalBots()*.005);
+  G.res.ore+=ore; G.res.silicon+=sil;
+  G.stats.clicks++; G.clicks=G.stats.clicks;
+  floatTxt(e,`+${ore.toFixed(1)} ore`,'#00e87a');
+  updateUI();
+}
+function manualForge(e){
+  if(G.res.ore<4){addLog('Need 4 ore to forge steel!','warn');return;}
+  G.res.ore-=4; G.res.steel+=1;
+  G.stats.forged+=1; G.stats.forgeClicks++;
+  floatTxt(e,'+1 steel','#ff8c00');
+  updateUI();
+}
+function floatTxt(e,txt,col='#00e87a'){
+  const el=document.createElement('div');
+  el.className='float-txt'; el.style.color=col; el.textContent=txt;
+  el.style.left=(e.clientX+Math.random()*20-10)+'px';
+  el.style.top=(e.clientY-10)+'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),1000);
+}
+function buyBuilding(bk){
+  const b=BDEFS[bk];
+  if(!b.unlocked) return;
+  const cost=buildingCost(bk);
+  if(!canAfford(cost)) return;
+  spend(cost); b.count++;
+  checkUnlocks();
+  addLog(`Built ${b.icon} ${b.name} (${b.count})`,'success');
+  updateUI();
+}
+function buildBots(t,amt){
+  if(!G.tiers[t].unlocked||amt<=0) return;
+  const tc={};for(const[k,v] of Object.entries(TIER_BOT_COST[t-1])) tc[k]=v*amt;
+  if(!canAfford(tc)){addLog(`Cannot afford ${amt} ${TIER_NAMES[t-1]} bots.`,'warn');return;}
+  spend(tc); G.tiers[t].count+=amt;
+  addLog(`Built ${amt} ${TIER_NAMES[t-1]} bots (total: ${Math.floor(G.tiers[t].count)})`,'success');
+  updateUI();
+}
+function assignedForTier(t){
+  let s=0;
+  for(const bk of Object.keys(BDEFS)) s+=G.assign[bk]?.[t]||0;
+  for(const r of REGIONS) if(r.active&&!r.won) s+=r.depByTier?.[t]||0;
+  return s;
+}
+function freeForTier(t){return Math.max(0,G.tiers[t].count-assignedForTier(t));}
+function assignBots(t,bk,n){
+  if(!G.tiers[t].unlocked) return;
+  const cur=G.assign[bk]?.[t]||0;
+  const avail=freeForTier(t)+cur;
+  const maxCap=buildingMaxBots(bk);
+  // Sum already assigned from other tiers to this building
+  let otherTiers=0;for(let tt=1;tt<=5;tt++) if(tt!==t) otherTiers+=G.assign[bk]?.[tt]||0;
+  const capRoom=Math.max(0,maxCap-otherTiers);
+  G.assign[bk][t]=Math.max(0,Math.min(Math.floor(n),Math.floor(avail),Math.floor(capRoom)));
+  updateUI();
+}
+function clampAssignments(t){
+  const max=Math.floor(G.tiers[t].count);
+  let tot=0;for(const bk of Object.keys(BDEFS)) tot+=G.assign[bk]?.[t]||0;
+  if(tot<=max) return;
+  const scale=max/tot;
+  for(const bk of Object.keys(BDEFS)) if(G.assign[bk]?.[t]) G.assign[bk][t]=Math.floor(G.assign[bk][t]*scale);
+}
+function checkUnlocks(){
+  if(BDEFS.smelter.count>=1)      BDEFS.miningRig.unlocked=true;
+  if(BDEFS.miningRig.count>=3)    BDEFS.siliconMine.unlocked=true;
+  if(BDEFS.siliconMine.count>=1)  BDEFS.powerPlant.unlocked=true;
+  if(BDEFS.powerPlant.count>=1)   BDEFS.condLab.unlocked=true;
+  if(BDEFS.condLab.count>=1)      BDEFS.chipFactory.unlocked=true;
+  if(BDEFS.chipFactory.count>=1)  BDEFS.robotFactory.unlocked=true;
+  if(BDEFS.robotFactory.count>=4) BDEFS.megaFurnace.unlocked=true;
+}
+
+// ══════════════════════════════════════════════
+//  COMPONENT SYSTEM
+// ══════════════════════════════════════════════
+function placeComp(t,anchorIdx,cid){
+  const tier=G.tiers[t];
+  if(!tier?.unlocked) return false;
+  const gs=TIER_SIZES[t-1];
+  const comp=compById(cid);
+  if(!comp||(G.inv[cid]||0)<=0){addLog('No stock of that component.','warn');return false;}
+  const ar=Math.floor(anchorIdx/gs), ac=anchorIdx%gs;
+  if(ar+comp.h>gs||ac+comp.w>gs){addLog(`${comp.name} [${comp.w}×${comp.h}] doesn't fit — try another cell.`,'warn');return false;}
+  const cells=[];
+  for(let dr=0;dr<comp.h;dr++) for(let dc=0;dc<comp.w;dc++){
+    const ci=(ar+dr)*gs+(ac+dc);
+    if(tier.occupied.has(ci)){addLog('Cell occupied. Click the component to remove it first.','warn');return false;}
+    cells.push(ci);
+  }
+  G.inv[cid]--;
+  tier.grid[anchorIdx]=cid;
+  cells.forEach(ci=>tier.occupied.add(ci));
+  addLog(`Placed ${comp.name} [${comp.w}×${comp.h}] on ${TIER_NAMES[t-1]}`,'success');
+  return true;
+}
+function removeComp(t,anchorIdx){
+  const tier=G.tiers[t];
+  const cid=tier?.grid[anchorIdx];
+  if(!cid) return;
+  const comp=compById(cid), gs=TIER_SIZES[t-1];
+  const ar=Math.floor(anchorIdx/gs), ac=anchorIdx%gs;
+  const w=comp?comp.w:1, h=comp?comp.h:1;
+  for(let dr=0;dr<h;dr++) for(let dc=0;dc<w;dc++) tier.occupied.delete((ar+dr)*gs+(ac+dc));
+  G.inv[cid]=(G.inv[cid]||0)+1;
+  delete tier.grid[anchorIdx];
+  addLog(`Removed ${comp?.name||cid} from ${TIER_NAMES[t-1]}`,'info');
+  updateUI();
+}
+function craftComp(){
+  if(G.res.steel<50){addLog('Need 50 steel to craft.','warn');return;}
+  const avail=COMPS.filter(c=>(G.inv[c.id]||0)<5);
+  if(!avail.length){addLog('All components maxed (5 each)!','warn');return;}
+  G.res.steel-=50;
+  const comp=avail[Math.floor(Math.random()*avail.length)];
+  G.inv[comp.id]=(G.inv[comp.id]||0)+1;
+  addLog(`Crafted: ${comp.name} [${comp.w}×${comp.h}]`,'success');
+  updateUI();
+}
+function buyUpgrade(i){
+  const u=UPGRADES[i];
+  if(G.upgrades[u.id]||!u.req()||!canAfford(u.cost)) return;
+  spend(u.cost); G.upgrades[u.id]=true; u.fn();
+  addLog(`Research: ${u.name}`,'victory'); updateUI();
+}
+
+// ══════════════════════════════════════════════
+//  BATTLE
+// ══════════════════════════════════════════════
+function deploy(ri){
+  const r=REGIONS[ri]; if(r.active||r.won) return;
+  const inp=document.getElementById(`dep-${ri}`);
+  const n=parseInt(inp?.value)||0;
+  const avail=Math.floor(availBots());
+  if(n<=0){addLog('Enter number of bots.','warn');return;}
+  if(n>avail){addLog(`Only ${avail} bots available!`,'warn');return;}
+  r.depBots=n; r.depByTier={}; let rem=n;
+  for(let t=5;t>=1;t--){const u=Math.floor(freeForTier(t));const take=Math.min(u,rem);r.depByTier[t]=take;rem-=take;if(rem<=0)break;}
+  r.lostBots=0; r.active=true;
+  addLog(`Deployed ${n} bots to ${r.name}`,'battle'); updateUI();
+}
+function recall(ri){
+  const r=REGIONS[ri]; if(!r.active||r.won) return;
+  addLog(`Recalled ${Math.floor(r.depBots)} bots from ${r.name}`,'warn');
+  r.active=false; r.depBots=0; r.depByTier={}; r.lostBots=0; updateUI();
+}
+function battleTick(r,dt){
+  if(r.depBots<=0){r.active=false;r.depByTier={};return;}
+  let pdmg=0;
+  for(let t=1;t<=5;t++){
+    const n=r.depByTier?.[t]||0;
+    if(n>0) pdmg+=n*TIER_POWER[t-1]*(1+tierCombat(t))*combatMul*r.botStr*dt*2.5;
+  }
+  r.def=Math.max(0,r.def-pdmg);
+  const edgm=(r.def/r.maxDef)*r.defStr*r.depBots*dt*.25;
+  let bestDef=0;
+  for(let t=1;t<=5;t++) if((r.depByTier?.[t]||0)>0) bestDef=Math.max(bestDef,tierDef(t));
+  const loss=edgm*(1-bestDef);
+  r.depBots=Math.max(0,r.depBots-loss); r.lostBots+=loss;
+  let lrem=loss;
+  for(let t=1;t<=5;t++){
+    const n=r.depByTier?.[t]||0;
+    const take=Math.min(n,lrem);
+    r.depByTier[t]=n-take;
+    G.tiers[t].count=Math.max(0,G.tiers[t].count-take);
+    clampAssignments(t);
+    lrem-=take; if(lrem<=0) break;
+  }
+  if(r.depBots<=.5){r.active=false;r.depBots=0;r.depByTier={};addLog(`All bots lost at ${r.name}!`,'battle');}
+  if(r.def<=0&&!r.won){
+    r.def=0;r.won=true;r.active=false;r.depBots=0;r.depByTier={};
+    G.stats.battles++;G.stats.rgn++;
+    addLog(`⚡ CONQUERED: ${r.name}!`,'victory');
+    r.rewardFn(); checkUnlocks();
+    if(REGIONS.every(rg=>rg.won)&&!G.won){G.won=true;setTimeout(triggerDom,600);}
+  }
+}
+function triggerDom(){G.won=true;document.getElementById('dom-screen').classList.add('show');addLog('WORLD DOMINATION ACHIEVED!','victory');}
+
+// ══════════════════════════════════════════════
+//  GAME TICK
+// ══════════════════════════════════════════════
+function gameTick(){
+  G.tick++;
+  const dt=.1;
+  const rates={ore:0,silicon:0,energy:0,steel:0,cond:0,chips:0,bots:0};
+  for(const bk of Object.keys(BDEFS)){
+    const b=BDEFS[bk]; if(b.count<=0) continue;
+    const pr=buildingRate(bk); if(pr<=0) continue;
+    const cr=buildingCons(bk);
+    if(b.prod==='bots') rates.bots+=pr;
+    else if(b.prod&&rates[b.prod]!==undefined) rates[b.prod]+=pr;
+    for(const[rk,cv] of Object.entries(cr)) if(rates[rk]!==undefined) rates[rk]-=cv;
+  }
+  G.rates=rates;
+  for(const k of Object.keys(G.res)) G.res[k]=Math.max(0,G.res[k]+(rates[k]||0)*dt);
+  if(rates.bots>0) G.tiers[1].count+=rates.bots*dt;
+  for(const r of REGIONS) if(r.active&&!r.won) battleTick(r,dt);
+  if(G.tick%3===0) updateUI();
+}
+
+// ══════════════════════════════════════════════
+//  LOG
+// ══════════════════════════════════════════════
+const LOG=[];
+function addLog(msg,type='info'){
+  LOG.unshift({t:new Date().toTimeString().slice(0,8),msg,type});
+  if(LOG.length>100) LOG.pop();
+  const lb=document.getElementById('log-body');
+  if(lb) lb.innerHTML=LOG.slice(0,60).map(e=>`<div class="le"><span class="lt">[${e.t}]</span><span class="l${e.type[0]}">${e.msg}</span></div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+//  DRAG & DROP
+// ══════════════════════════════════════════════
+function dragStart(e,cid){
+  G.dragging=cid;
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',cid);
+  document.querySelectorAll('.tc:not(.filled)').forEach(el=>el.classList.add('drop-hi'));
+}
+function dragEnd(){
+  G.dragging=null;
+  document.querySelectorAll('.tc').forEach(el=>el.classList.remove('drop-hi'));
+}
+function dropCell(e,t,idx){
+  e.preventDefault(); e.stopPropagation();
+  const cid=G.dragging||e.dataTransfer.getData('text/plain');
+  if(cid) placeComp(t,idx,cid);
+  dragEnd(); updateUI();
+}
+
+// ══════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════
+function updateUI(){
+  for(const rk of ['ore','silicon','energy','steel','cond','chips']){
+    const ve=document.getElementById(`res-${rk}`); if(ve) ve.textContent=fmt(G.res[rk]||0);
+    const re=document.getElementById(`rate-${rk}`);
+    if(re){const v=G.rates[rk]||0;re.textContent=fmtR(v);re.className='res-rate'+(v<-.0005?' neg':v<.0005?' zero':'');}
+  }
+  const cc=Object.values(G.inv).reduce((a,b)=>a+b,0);
+  const ce=document.getElementById('res-comps'); if(ce) ce.textContent=cc;
+  document.getElementById('stat-bots').textContent=fmt(totalBots());
+  document.getElementById('stat-battles').textContent=G.stats.battles;
+  document.getElementById('stat-regions').textContent=G.stats.rgn;
+  document.getElementById('stat-tiers').textContent=G.unlocked;
+  document.getElementById('stat-forged').textContent=fmt(G.stats.forged);
+  const s=Math.floor((Date.now()-G.stats.start)/1000);
+  document.getElementById('runtime').textContent=`${String(Math.floor(s/3600)).padStart(2,'0')}:${String(Math.floor(s%3600/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  const cp=document.getElementById('click-power');
+  if(cp) cp.textContent=`+${(1*clickMul*(1+totalBots()*.01)).toFixed(1)} ore  /  +${(.5*clickMul*(1+totalBots()*.005)).toFixed(1)} silicon`;
+  const fb=document.getElementById('forge-btn');
+  if(fb){if(G.res.ore<4)fb.classList.add('disabled');else fb.classList.remove('disabled');}
+  renderBuildings(); renderTiers(); renderMatrix(); renderPalette(); renderUpgrades(); renderBattle();
+}
+
+// ── BUILDINGS ──
+function renderBuildings(){
+  const el=document.getElementById('buildings-list'); if(!el) return;
+  el.innerHTML=Object.entries(BDEFS).map(([bk,b])=>{
+    const cost=buildingCost(bk);
+    const afford=b.unlocked&&canAfford(cost);
+    const costStr=Object.entries(cost).map(([k,v])=>`${fmt(v)} ${k}`).join(', ');
+    const starved=b.count>0&&isStarved(bk);
+    const idle=b.count>0&&assignedBots(bk)===0;
+    let cls='bcard';
+    if(!b.unlocked)       cls+=' locked';
+    else if(starved)      cls+=' starved';
+    else if(idle)         cls+=' idle';
+    else if(!afford)      cls+=' cannot-afford';
+    else                  cls+=' affordable';
+    const r=buildingRate(bk);
+    let statusHTML='';
+    if(b.count>0){
+      if(starved)   statusHTML=`<div class="bstatus starved">⚠ STARVED — input depleted</div>`;
+      else if(idle) statusHTML=`<div class="bstatus idle">⏸ IDLE — assign bots to produce</div>`;
+      else          statusHTML=`<div class="bstatus producing">▶ ${fmtR(r)} ${b.prod}</div>`;
+    }
+    // Bot assignment summary
+    let botStr=''; let totAssigned=0;
+    for(let t=1;t<=G.unlocked;t++){const n=Math.floor(G.assign[bk]?.[t]||0);if(n>0)botStr+=`T${t}:${n} `;totAssigned+=n;}
+
+    // Capacity bar
+    let capHTML='';
+    if(b.count>0){
+      const maxCap=buildingMaxBots(bk);
+      const pct=Math.min(1,totAssigned/maxCap);
+      const pctPx=Math.round(pct*100);
+      const full=pct>=1;
+      capHTML=`<div class="cap-row">
+        <div class="cap-bar-wrap"><div class="cap-bar-fill ${full?'full':'ok'}" style="width:${pctPx}%"></div></div>
+        <span class="cap-label ${full?'at-cap':'cap-cell'}">${totAssigned}/${maxCap} bots${full?' (FULL)':''}</span>
+      </div>`;
+    }
+
+    return `<div class="${cls}" onclick="${b.unlocked?`buyBuilding('${bk}')`:''}" style="${!b.unlocked?'cursor:not-allowed':''}">
+      <div class="bcard-hdr">
+        <span class="bcard-name">${b.icon} ${b.name}</span>
+        <span class="bcard-cnt">${b.count}</span>
+      </div>
+      <div class="bcard-desc">${b.desc}</div>
+      ${b.unlocked
+        ?`<div class="bcard-cost">Cost: ${costStr}</div>${statusHTML}${capHTML}${totAssigned>0?`<div class="bbots">Assigned: ${botStr}</div>`:''}`
+        :`<div style="font-size:9px;color:var(--text-dim)">🔒 ${b.msg}</div>`}
+    </div>`;
+  }).join('');
+}
+
+// ── TIER GRID (proportional) ──
+function tierGridHTML(t){
+  const tier=G.tiers[t], gs=TIER_SIZES[t-1];
+  const CP=cellPx(t), ST=cellStep(t);
+  const sz=gridSz(t);
+
+  let html=`<div class="tgrid-container" style="width:${sz}px;height:${sz}px">`;
+
+  // Empty cells
+  for(let row=0;row<gs;row++) for(let col=0;col<gs;col++){
+    const idx=row*gs+col;
+    if(!tier.occupied.has(idx)){
+      const x=GRID_PAD+col*ST, y=GRID_PAD+row*ST;
+      html+=`<div class="tc" style="left:${x}px;top:${y}px;width:${CP}px;height:${CP}px;"
+        ondragover="event.preventDefault()" ondrop="dropCell(event,${t},${idx})"
+        title="Drop component here (${row+1},${col+1})"></div>`;
+    }
+  }
+
+  // Placed components — sized to their exact cell footprint
+  for(const[ai,cid] of Object.entries(tier.grid)){
+    const a=parseInt(ai), comp=compById(cid); if(!comp) continue;
+    const ar=Math.floor(a/gs), ac=a%gs;
+    const pw=comp.w*ST-GRID_GAP, ph=comp.h*ST-GRID_GAP;
+    const x=GRID_PAD+ac*ST, y=GRID_PAD+ar*ST;
+    // Scale icon and label to cell size
+    const iconSz=Math.max(10, Math.min(18, Math.floor(CP*0.38)));
+    const lblSz =Math.max(6,  Math.min(10, Math.floor(CP*0.18)));
+    // Only show label if there's enough room
+    const showLbl=ph>=36&&pw>=30;
+    const nameClip=comp.name.slice(0, pw>60 ? 12 : pw>40 ? 8 : 5);
+    html+=`<div class="tc filled"
+      style="left:${x}px;top:${y}px;width:${pw}px;height:${ph}px;"
+      onclick="removeComp(${t},${a})"
+      title="${comp.name} [${comp.w}×${comp.h}]&#10;${comp.desc}&#10;Click to remove">
+      <div class="comp-inner">
+        <div class="comp-icon" style="font-size:${iconSz}px">${CICONS[comp.cat]||'?'}</div>
+        ${showLbl?`<div class="comp-lbl" style="font-size:${lblSz}px">${nameClip}</div>`:''}
+      </div>
+    </div>`;
+  }
+  html+='</div>';
+  return html;
+}
+
+// ── TIERS TAB ──
+function renderTiers(){
+  const cont=document.getElementById('tiers-container'); if(!cont) return;
+  cont.innerHTML='';
+  for(let t=1;t<=5;t++){
+    const tier=G.tiers[t], free=Math.floor(freeForTier(t));
+    const cls=!tier.unlocked?'tier-card locked-tier':'tier-card';
+
+    // Active bonus summary
+    const bonusCats=['mining','smelting','combat','speed','defense','efficiency','energy','factory','chips'];
+    const bonusPills=bonusCats.map(cat=>{
+      const v=tierBonus(t,cat);
+      const active=v>0;
+      return `<span class="bonus-pill ${active?'active':'zero'}">${CICONS[cat]||cat} ${active?('+'+Math.round(v*100)+'%'):'-'}</span>`;
+    }).join('');
+
+    const compList=Object.values(tier.grid).map(cid=>{
+      const c=compById(cid); if(!c) return '';
+      return `<div class="tier-comp-entry">${CICONS[c.cat]||''} ${c.name}: <span>${c.desc}</span></div>`;
+    }).join('')||'<div style="color:var(--text-dim)">No components installed.</div>';
+
+    cont.innerHTML+=`<div class="${cls}">
+      <div class="tier-hdr">
+        <span class="tier-name">${TIER_NAMES[t-1]} ${!tier.unlocked?'🔒':''}</span>
+        <span class="tier-count">${tier.unlocked?fmt(Math.floor(tier.count)):'—'}</span>
+      </div>
+      ${tier.unlocked?`
+        <div class="tier-meta">
+          Grid: <b style="color:var(--cyan)">${TIER_SIZES[t-1]}×${TIER_SIZES[t-1]}</b>
+          &nbsp;|&nbsp; Power: <b style="color:var(--yellow)">${TIER_POWER[t-1]}×</b>
+          &nbsp;|&nbsp; Free: <b style="color:${free>0?'var(--green)':'var(--red)'}">${fmt(free)}</b>
+        </div>
+        <div class="bonus-bar">${bonusPills}</div>
+        <div class="tier-grid-wrap">
+          ${tierGridHTML(t)}
+          <div class="tier-comp-list">${compList}</div>
+        </div>
+        <div class="tier-actions">
+          <input type="number" id="bc-${t}" value="1" min="1" max="9999">
+          <button class="btn-sm build" onclick="buildBots(${t},parseInt(document.getElementById('bc-${t}').value)||1)">BUILD</button>
+          <span style="font-size:9px;color:var(--orange)">${Object.entries(TIER_BOT_COST[t-1]).map(([k,v])=>`${fmt(v)} ${k}`).join(', ')}/bot</span>
+        </div>
+      `:`<div style="font-size:9px;color:var(--text-dim)">Unlock via Research tab.</div>`}
+    </div>`;
+  }
+}
+
+// ── ASSIGNMENT MATRIX ──
+function renderMatrix(){
+  const cont=document.getElementById('assign-matrix'); if(!cont) return;
+  const bkeys=Object.keys(BDEFS).filter(k=>BDEFS[k].unlocked&&BDEFS[k].count>0);
+  if(!bkeys.length){
+    cont.innerHTML='<div style="font-size:10px;color:var(--text-dim);padding:4px">Buy a building first, then assign bots. <b style="color:var(--orange)">Buildings need bots to produce anything.</b></div>';
+    return;
+  }
+  let html='<table class="assign-table"><thead><tr><th>TIER</th><th>TOTAL</th><th>FREE</th>';
+  for(const bk of bkeys){
+    const b=BDEFS[bk];
+    const maxCap=buildingMaxBots(bk);
+    const cur=assignedBots(bk);
+    const full=cur>=maxCap;
+    html+=`<th>${b.icon} ${b.name.slice(0,9)}<br><span style="color:${full?'var(--orange)':'var(--text-dim)'}">cap ${cur}/${maxCap}</span></th>`;
+  }
+  html+='</tr></thead><tbody>';
+  for(let t=1;t<=G.unlocked;t++){
+    const tot=Math.floor(G.tiers[t].count), fr=Math.floor(freeForTier(t));
+    html+=`<tr>
+      <td style="color:var(--cyan)">${TIER_NAMES[t-1]}</td>
+      <td style="color:var(--yellow)">${fmt(tot)}</td>
+      <td style="color:${fr>0?'var(--green)':'var(--red)'}">${fmt(fr)}</td>`;
+    for(const bk of bkeys){
+      const v=Math.floor(G.assign[bk]?.[t]||0);
+      const maxCap=buildingMaxBots(bk);
+      const totalForBuilding=assignedBots(bk);
+      const overCap=totalForBuilding>=maxCap&&v===0;
+      html+=`<td><input type="number" value="${v}" min="0" ${overCap?'title="Building at capacity"':''} class="${overCap?'over-cap':''}" onchange="assignBots(${t},'${bk}',parseInt(this.value)||0)"></td>`;
+    }
+    html+='</tr>';
+  }
+  html+='</tbody></table>';
+  html+='<div style="font-size:9px;color:var(--text-dim);margin-top:4px">⚡ Buildings produce nothing without assigned bots. Capacity = <span style="color:var(--cyan)">botCap × building count</span> — build more to raise limits.</div>';
+  cont.innerHTML=html;
+}
+
+// ── COMPONENT PALETTE ──
+function renderPalette(){
+  const cont=document.getElementById('comp-palette'); if(!cont) return;
+  let html=`<div style="font-size:9px;color:var(--text-dim);width:100%;margin-bottom:3px">📦 <b style="color:var(--text)">Inventory</b> — drag onto tier grids:</div>`;
+  let any=false;
+  for(const comp of COMPS){
+    const n=G.inv[comp.id]||0; if(!n) continue; any=true;
+    html+=`<span class="comp-chip" draggable="true"
+      ondragstart="dragStart(event,'${comp.id}')" ondragend="dragEnd()"
+      title="${comp.name} [${comp.w}×${comp.h}]&#10;${comp.desc}&#10;Cat: ${comp.cat}">
+      ${CICONS[comp.cat]||''} ${comp.name}
+      <span class="sz-badge">${comp.w}×${comp.h}</span>
+      <span class="comp-cnt">(${n})</span>
+    </span>`;
+  }
+  if(!any) html+=`<span style="font-size:9px;color:var(--text-dim)">Empty — craft or earn from battles.</span>`;
+  html+=`<button class="btn-sm" onclick="craftComp()" style="margin-left:auto" title="Random component for 50 steel">🔨 Craft <span style="color:var(--orange);font-size:9px">(50 🔩)</span></button>`;
+  cont.innerHTML=html;
+}
+
+// ── UPGRADES ──
+function renderUpgrades(){
+  const el=document.getElementById('upgrades-list'); if(!el) return;
+  el.innerHTML=UPGRADES.map((u,i)=>{
+    const bought=!!G.upgrades[u.id], reqOk=u.req(), afford=reqOk&&canAfford(u.cost);
+    const costStr=Object.entries(u.cost).map(([k,v])=>`${fmt(v)} ${k}`).join(', ');
+    let cls='ucard';
+    if(bought)      cls+=' purchased';
+    else if(!reqOk) cls+=' locked';
+    else if(!afford)cls+=' cannot-afford';
+    else            cls+=' affordable';
+    return `<div class="${cls}" onclick="buyUpgrade(${i})">
+      <div class="uname">${u.name}</div>
+      <div class="ueffect">${u.eff}</div>
+      <div class="ucost">Cost: ${costStr}</div>
+      ${!reqOk&&!bought?`<div class="ureq">Req: ${u.reqMsg}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ── BATTLE ──
+function renderBattle(){
+  const el=document.getElementById('regions-list'); if(!el) return;
+  el.innerHTML=REGIONS.map((r,i)=>{
+    const unlocked=i===0||REGIONS[i-1].won;
+    let cls='rcard';
+    if(r.won)         cls+=' conquered';
+    else if(r.active) cls+=' active-battle';
+    else if(!unlocked)cls+=' locked-r';
+    const skulls=Array.from({length:5},(_,j)=>`<span class="skull${j<r.diff?'':' dim'}">☠</span>`).join('');
+    let body='';
+    if(r.won){
+      body=`<div style="color:var(--green);font-size:11px">✓ REGION SUBJUGATED</div><div class="reward-badge">${r.reward}</div>`;
+    } else if(!unlocked){
+      body=`<div style="font-size:10px;color:var(--text-dim)">🔒 Conquer previous region first.</div>`;
+    } else {
+      const dp=(r.def/r.maxDef*100).toFixed(1);
+      const bp=r.active?Math.min(100,r.depBots/(r.depBots+r.lostBots+.001)*100).toFixed(1):0;
+      body=`<div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">${r.desc}</div>
+        <div class="prog-bar"><div class="prog-fill enemy" style="width:${dp}%"></div></div>
+        <div style="font-size:9px;color:var(--red)">Defenders: ${fmt(r.def)} / ${fmt(r.maxDef)}</div>
+        ${r.active?`<div class="prog-bar"><div class="prog-fill player" style="width:${bp}%"></div></div>
+        <div style="font-size:9px;color:var(--green)">Active bots: ${Math.floor(r.depBots)}</div>`:''}
+        <div class="reward-badge">🏆 ${r.reward}</div>
+        <div class="deploy-row">
+          ${r.active
+            ?`<span style="color:var(--orange);font-size:10px">⚔ BATTLE IN PROGRESS</span><button class="recall-btn" onclick="recall(${i})">RECALL</button>`
+            :`<input class="dep-input" id="dep-${i}" type="number" min="1" placeholder="# bots">
+             <button class="dep-btn" onclick="deploy(${i})">DEPLOY ▶</button>
+             <span style="font-size:9px;color:var(--text-dim)">Avail: ${fmt(availBots())}</span>`}
+        </div>`;
+    }
+    return `<div class="${cls}">
+      <div class="rhdr"><span class="rname">${r.name}</span><span>${skulls}</span></div>
+      ${body}
+    </div>`;
+  }).join('');
+}
+
+function switchTab(tab,e){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  const p=document.getElementById(`tab-${tab}`); if(p) p.classList.add('active');
+  if(e?.target) e.target.classList.add('active');
+  updateUI();
+}
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+function init(){
+  addLog('IRON GENESIS initialized.','info');
+  addLog('Step 1: Mine ore  →  Step 2: Forge steel (4 ore:1 steel)','info');
+  addLog('Step 3: Buy Smelter  →  Step 4: Build T1 bots  →  Assign bots to buildings','info');
+  addLog('Buildings produce NOTHING until bots are assigned.','warn');
+  checkUnlocks(); updateUI();
+  setInterval(gameTick, 100);
+  setInterval(updateUI, 300);
+}
+document.addEventListener('dragover',e=>e.preventDefault());
+document.addEventListener('drop',e=>{e.preventDefault();dragEnd();});
+init();
+</script>
+</body>
+</html>
